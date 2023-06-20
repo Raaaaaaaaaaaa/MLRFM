@@ -7,6 +7,7 @@ package com.mlhui.others;
 * @description used to store the item and corresponding count in the transaction
  * database.
  */
+@Deprecated
 public class InternalPair {
     private int item;
     private int count;

@@ -1,7 +1,9 @@
 package com.mlhui.component;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
 *
@@ -11,18 +13,21 @@ import java.util.List;
  */
 public class Transaction {
     private int tid;
-    private List<Integer> itemListPerLevel = new ArrayList<>();
+    private Map<Integer, List<Integer>> itemListPerLevel = new HashMap<>();
     private int TU;
     private double recency;
+    private Map<Integer, Integer> mapItemToCount = new HashMap<>();
+
 
     public Transaction() {
     }
 
-    public Transaction(int tid, List<Integer> itemListPerLevel, int TU, double recency) {
+    public Transaction(int tid, Map<Integer, List<Integer>> itemListPerLevel, int TU, double recency, Map<Integer, Integer> mapItemToCount) {
         this.tid = tid;
         this.itemListPerLevel = itemListPerLevel;
         this.TU = TU;
         this.recency = recency;
+        this.mapItemToCount = mapItemToCount;
     }
 
     public int getTid() {
@@ -33,11 +38,11 @@ public class Transaction {
         this.tid = tid;
     }
 
-    public List<Integer> getItemListPerLevel() {
+    public Map<Integer, List<Integer>> getItemListPerLevel() {
         return itemListPerLevel;
     }
 
-    public void setItemListPerLevel(List<Integer> itemListPerLevel) {
+    public void setItemListPerLevel(Map<Integer, List<Integer>> itemListPerLevel) {
         this.itemListPerLevel = itemListPerLevel;
     }
 
@@ -55,5 +60,13 @@ public class Transaction {
 
     public void setRecency(double recency) {
         this.recency = recency;
+    }
+
+    public Map<Integer, Integer> getMapItemToCount() {
+        return mapItemToCount;
+    }
+
+    public void setMapItemToCount(Map<Integer, Integer> mapItemToCount) {
+        this.mapItemToCount = mapItemToCount;
     }
 }

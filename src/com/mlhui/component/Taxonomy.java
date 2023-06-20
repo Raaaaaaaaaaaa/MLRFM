@@ -13,14 +13,16 @@ import java.util.Map;
  */
 public class Taxonomy {
     private int maxLevel;
-    private List<Integer> itemListPerLevel = new ArrayList<>();
+    private Map<Integer, List<Integer>> itemListPerLevel = new HashMap<>();
     private Map<Integer, List<Integer>> mapItemToAncestor = new HashMap<>();
     private Map<Integer, List<Integer>> mapItemToChildren = new HashMap<>();
+
 
     public Taxonomy() {
     }
 
-    public Taxonomy(int maxLevel, List<Integer> itemListPerLevel, Map<Integer, List<Integer>> mapItemToAncestor, Map<Integer, List<Integer>> mapItemToChildren) {
+
+    public Taxonomy(int maxLevel, Map<Integer, List<Integer>> itemListPerLevel, Map<Integer, List<Integer>> mapItemToAncestor, Map<Integer, List<Integer>> mapItemToChildren) {
         this.maxLevel = maxLevel;
         this.itemListPerLevel = itemListPerLevel;
         this.mapItemToAncestor = mapItemToAncestor;
@@ -35,11 +37,11 @@ public class Taxonomy {
         this.maxLevel = maxLevel;
     }
 
-    public List<Integer> getItemListPerLevel() {
+    public Map<Integer, List<Integer>> getItemListPerLevel() {
         return itemListPerLevel;
     }
 
-    public void setItemListPerLevel(List<Integer> itemListPerLevel) {
+    public void setItemListPerLevel(Map<Integer, List<Integer>> itemListPerLevel) {
         this.itemListPerLevel = itemListPerLevel;
     }
 
@@ -58,4 +60,5 @@ public class Taxonomy {
     public void setMapItemToChildren(Map<Integer, List<Integer>> mapItemToChildren) {
         this.mapItemToChildren = mapItemToChildren;
     }
+
 }

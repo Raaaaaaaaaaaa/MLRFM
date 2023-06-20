@@ -2,6 +2,7 @@ package com.mlhui.component.dataset;
 
 import com.mlhui.component.Transaction;
 import com.mlhui.component.dataset.component.UtilityList;
+import com.mlhui.others.ExternalPair;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,13 +17,15 @@ import java.util.Map;
 public class DataSet {
     private Map<Integer, List<UtilityList>> UtilityListPerLevel = new HashMap<>();
     private List<Transaction> transactionList = new ArrayList<>();
+    private List<ExternalPair> itemProfitTable = new ArrayList<>();
 
     public DataSet() {
     }
 
-    public DataSet(Map<Integer, List<UtilityList>> utilityListPerLevel, List<Transaction> transactionList) {
+    public DataSet(Map<Integer, List<UtilityList>> utilityListPerLevel, List<Transaction> transactionList, List<ExternalPair> itemProfitTable) {
         UtilityListPerLevel = utilityListPerLevel;
         this.transactionList = transactionList;
+        this.itemProfitTable = itemProfitTable;
     }
 
     public Map<Integer, List<UtilityList>> getUtilityListPerLevel() {
@@ -39,5 +42,13 @@ public class DataSet {
 
     public void setTransactionList(List<Transaction> transactionList) {
         this.transactionList = transactionList;
+    }
+
+    public List<ExternalPair> getItemProfitTable() {
+        return itemProfitTable;
+    }
+
+    public void setItemProfitTable(List<ExternalPair> itemProfitTable) {
+        this.itemProfitTable = itemProfitTable;
     }
 }
