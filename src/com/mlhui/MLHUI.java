@@ -11,17 +11,19 @@ public class MLHUI {
     private Taxonomy taxonomy;
     private Map<Integer, Double> mapItemToRecency = new HashMap<>();
     private Map<Integer, Integer> mapItemToFrequency= new HashMap<>();
+    private Map<Integer, Double> mapItemToMonetary = new HashMap<>();
     private Map<Integer, Integer> mapItemToTWU = new HashMap<>();
 
 
     public MLHUI() {
     }
 
-    public MLHUI(DataSet dataSet, Taxonomy taxonomy, Map<Integer, Double> mapItemToRecency, Map<Integer, Integer> mapItemToFrequency, Map<Integer, Integer> mapItemToTWU) {
+    public MLHUI(DataSet dataSet, Taxonomy taxonomy, Map<Integer, Double> mapItemToRecency, Map<Integer, Integer> mapItemToFrequency, Map<Integer, Double> mapItemToMonetary, Map<Integer, Integer> mapItemToTWU) {
         this.dataSet = dataSet;
         this.taxonomy = taxonomy;
         this.mapItemToRecency = mapItemToRecency;
         this.mapItemToFrequency = mapItemToFrequency;
+        this.mapItemToMonetary = mapItemToMonetary;
         this.mapItemToTWU = mapItemToTWU;
     }
 
@@ -63,5 +65,13 @@ public class MLHUI {
 
     public void setMapItemToTWU(Map<Integer, Integer> mapItemToTWU) {
         this.mapItemToTWU = mapItemToTWU;
+    }
+
+    public Map<Integer, Double> getMapItemToMonetary() {
+        return mapItemToMonetary;
+    }
+
+    public void setMapItemToMonetary(Map<Integer, Double> mapItemToMonetary) {
+        this.mapItemToMonetary = mapItemToMonetary;
     }
 }

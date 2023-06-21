@@ -3,6 +3,8 @@ import com.mlhui.MLHUI;
 import com.mlhui.component.Taxonomy;
 import com.mlhui.component.Transaction;
 import com.mlhui.component.dataset.DataSet;
+import com.mlhui.component.dataset.component.Element;
+import com.mlhui.component.dataset.component.UtilityList;
 import com.mlhui.others.ExternalPair;
 import com.mlhui.others.UserSpecified;
 
@@ -10,6 +12,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -40,8 +43,19 @@ public class AlgorithmMLRFM {
         calculateTU(mlhui);
         calculateRecency(mlhui, userSpecified.getDelta());
         calculateFrequency(mlhui);
+//        calculateMonetary(mlhui);
         calculateTWU(mlhui);
 
+        setMinThreshold(userSpecified, rfm, mlhui);
+        revisedTransaction(getRFTPatterns(mlhui, rfm), mlhui);
+        constructUtilityList(mlhui);
+
+
+        int maxLevel = mlhui.getTaxonomy().getMaxLevel();
+        for (int level = 0; level <= maxLevel; level++) {
+            exploreSearchTree(null, null,
+                    mlhui.getDataSet().getUtilityListPerLevel().get(level));
+        }
 
         statistics.setEndTimestamp(System.currentTimeMillis());
 
@@ -347,6 +361,56 @@ public class AlgorithmMLRFM {
 
         return -1;
     }
+
+    public void calculateMonetary(MLHUI mlhui) {
+        Taxonomy taxonomy = mlhui.getTaxonomy();
+
+        DataSet dataSet = mlhui.getDataSet();
+        List<ExternalPair> itemProfitTable = dataSet.getItemProfitTable();
+        List<Transaction> transactionList = dataSet.getTransactionList();
+
+        Map<Integer, Double> mapItemToMonetary = mlhui.getMapItemToMonetary();
+
+        int maxLevel = taxonomy.getMaxLevel();
+        //calculate the Monetary where level = 0
+        for (Transaction transaction : transactionList) {
+            List<Integer> itemList = transaction.getItemListPerLevel().get(0);
+            Map<Integer, Integer> mapItemToCount = transaction.getMapItemToCount();
+            for (Integer item : itemList) {
+                Double itemMonetary = mapItemToMonetary.get(item);
+                if (null == itemMonetary) {
+                    itemMonetary = 0.0;
+                }
+
+                int utility = getItemUtility(item, itemProfitTable);
+                int cnt = mapItemToCount.get(item);
+                itemMonetary += utility * cnt;
+
+                mapItemToMonetary.put(item, itemMonetary);
+            }
+        }
+
+        //calculate the Monetary where level > 0
+        for (int level = 1; level <= maxLevel; level++) {
+            List<Integer> itemList = taxonomy.getItemListPerLevel().get(level);
+            Map<Integer, List<Integer>> mapItemToChildren = taxonomy.getMapItemToChildren();
+            for (Integer item : itemList) {
+                List<Integer> childrenList = mapItemToChildren.get(item);
+                Double itemMonetary = mapItemToMonetary.get(item);
+
+                if(null == itemMonetary) {
+                    itemMonetary = 0.0;
+                }
+
+                for (Integer child : childrenList) {
+                    itemMonetary += mapItemToMonetary.get(child);
+                }
+
+                mapItemToMonetary.put(item, itemMonetary);
+            }
+        }
+    }
+
     public void calculateTWU(MLHUI mlhui) {
         Taxonomy taxonomy = mlhui.getTaxonomy();
         int maxLevel = taxonomy.getMaxLevel();
@@ -436,5 +500,259 @@ public class AlgorithmMLRFM {
 
     public void setMlhui(MLHUI mlhui) {
         this.mlhui = mlhui;
+    }
+
+    public void setMinThreshold(UserSpecified userSpecified, RFM rfm, MLHUI mlhui) {
+        rfm.setMinRecency(userSpecified.getGamma());
+
+        int transactionSize = mlhui.getDataSet().getTransactionList().size();
+        rfm.setMinFrequency(transactionSize * userSpecified.getAlpha());
+
+        rfm.setMinMonetary(userSpecified.getBeta());
+    }
+
+    public Map<Integer, List<Integer>> getRFTPatterns(MLHUI mlhui, RFM rfm) {
+        Map<Integer, List<Integer>> RFTListPerLevel = new HashMap<>();
+
+        Map<Integer, Integer> mapItemToTWU = mlhui.getMapItemToTWU();
+        Map<Integer, Double> mapItemToRecency = mlhui.getMapItemToRecency();
+        Map<Integer, Integer> mapItemToFrequency = mlhui.getMapItemToFrequency();
+        Map<Integer, List<Integer>> itemListPerLevel = mlhui.getTaxonomy().getItemListPerLevel();
+
+        int maxLevel = mlhui.getTaxonomy().getMaxLevel();
+        for (int level = 0; level <= maxLevel; level++) {
+            List<Integer> RFTList = RFTListPerLevel.get(level);
+
+            if(null == RFTList) {
+                RFTList = new ArrayList<>();
+            }
+
+            for (Integer item : itemListPerLevel.get(level)) {
+                if(mapItemToTWU.get(item) >= rfm.getMinMonetary() && mapItemToFrequency.get(item) >= rfm.getMinFrequency()
+                        && mapItemToRecency.get(item) >= rfm.getMinRecency()) {
+                    RFTList.add(item);
+                }
+            }
+
+            RFTListPerLevel.put(level, RFTList);
+        }
+
+        return RFTListPerLevel;
+    }
+
+    public void revisedTransaction(Map<Integer, List<Integer>> RFTListPerLevel, MLHUI mlhui) {
+        Taxonomy taxonomy = mlhui.getTaxonomy();
+        int maxLevel = taxonomy.getMaxLevel();
+
+        DataSet dataSet = mlhui.getDataSet();
+        List<Transaction> transactionList = dataSet.getTransactionList();
+        List<ExternalPair> itemProfitTable = dataSet.getItemProfitTable();
+
+        for (int level = 0; level <= maxLevel; level++) {
+            List<Integer> RFTList = RFTListPerLevel.get(level);
+
+            List<Integer> itemListInTaxonomy = taxonomy.getItemListPerLevel().get(level);
+            itemListInTaxonomy.removeIf(item -> !RFTList.contains(item));
+            //need TWU ascending order
+
+            for (Transaction transaction : transactionList) {
+                List<Integer> itemList = transaction.getItemListPerLevel().get(level);
+                Map<Integer, Integer> mapItemToCount = transaction.getMapItemToCount();
+                for (Integer item : itemList) {
+                 if(!RFTList.contains(item)) {
+                     int utility = getItemUtility(item, itemProfitTable);
+                     Integer cnt = mapItemToCount.get(item);
+                     transaction.setTU(transaction.getTU() - utility * cnt);
+
+                     itemList.remove(item);
+                 }
+
+                 //TODO TWU ascending order
+                 transaction.getItemListPerLevel().put(level, itemList);
+                }
+            }
+        }
+    }
+
+    public void constructUtilityList(MLHUI mlhui) {
+        Taxonomy taxonomy = mlhui.getTaxonomy();
+        Map<Integer, List<Integer>> itemListPerLevel = taxonomy.getItemListPerLevel();
+
+        DataSet dataSet = mlhui.getDataSet();
+        List<Transaction> transactionList = dataSet.getTransactionList();
+
+        int maxLevel = taxonomy.getMaxLevel();
+        for (int level = 0; level < maxLevel; level++) {
+            List<Integer> itemListInTaxonomy = itemListPerLevel.get(level);
+            //UtilityList is construct based on TWU ascending order object itemListPerLevel in taxonomy,
+            //so it is TWU ascending order.
+            List<UtilityList> utilityLists = dataSet.getUtilityListPerLevel().get(level);
+
+            if(null == utilityLists) {
+                utilityLists = new ArrayList<>();
+            }
+
+            for (Integer item : itemListInTaxonomy) {
+                UtilityList utilityList = new UtilityList();
+                utilityList.setItem(item);
+            }
+
+            for (Transaction transaction : transactionList) {
+                List<Integer> itemList = transaction.getItemListPerLevel().get(level);
+                Map<Integer, Integer> mapItemToCount = transaction.getMapItemToCount();
+                List<ExternalPair> itemProfitTable = dataSet.getItemProfitTable();
+                Element element = new Element();
+                for (Integer item : itemList) {
+                    element.setTid(transaction.getTid());
+
+                    Integer utility = getItemUtility(item, itemProfitTable);
+                    Integer cnt = mapItemToCount.get(item);
+
+                    element.setUtility(utility * cnt);
+                    element.setRemainingUtility(getItemRUInTransaction(transaction, level, item, itemProfitTable));
+
+                    UtilityList utilityList = getUtilityListOf(utilityLists, item);
+                    if(null != utilityList) {
+                        utilityList.addElement(element);
+                    }
+                }
+            }
+        }
+    }
+
+    private int getItemRUInTransaction(Transaction transaction, int level,
+                                       int item, List<ExternalPair> itemProfitTable) {
+        Map<Integer, List<Integer>> itemListPerLevel = transaction.getItemListPerLevel();
+        List<Integer> itemList = itemListPerLevel.get(level);
+
+        Map<Integer, Integer> mapItemToCount = transaction.getMapItemToCount();
+
+        int s = itemList.indexOf(item);
+        int size = itemList.size();
+
+        if(s >= size - 1) {
+            return 0;
+        }
+
+        int ru = 0;
+        for (int i = s + 1; i < size; i++) {
+            Integer afterItem = itemList.get(i);
+            int utility = getItemUtility(afterItem, itemProfitTable);
+            int cnt = mapItemToCount.get(afterItem);
+
+            ru += utility * cnt;
+        }
+
+        return ru;
+    }
+
+    public UtilityList getUtilityListOf(List<UtilityList> utilityLists, int item) {
+        for (UtilityList utilityList : utilityLists) {
+            if(item == utilityList.getItem()) {
+                return utilityList;
+            }
+        }
+
+        return null;
+    }
+
+    public void exploreSearchTree(int[] prefix, UtilityList prefixUtilityLists,
+                                  List<UtilityList> extendUtilityLists) {
+        Map<Integer, Integer> mapItemToFrequency = mlhui.getMapItemToFrequency();
+        Map<Integer, Double> mapItemToRecency = mlhui.getMapItemToRecency();
+
+        int len = extendUtilityLists.size();
+        for (int i = 0; i < len; i++) {
+            UtilityList PX_UL = extendUtilityLists.get(i);
+            int itemX = PX_UL.getItem();
+            if(PX_UL.getUtility() >= rfm.getMinMonetary() && mapItemToFrequency.get(itemX) >= rfm.getMinFrequency()
+                    && mapItemToRecency.get(itemX) >= rfm.getMinRecency()) {
+                //handle the RFM-patterns
+                System.out.println(itemX);
+            }
+
+            List<UtilityList> newExULs = new ArrayList<>();
+            if(PX_UL.getUtility() + PX_UL.getRemainingUtility() >= rfm.getMinMonetary()) {
+                for (int j = i + 1; j < len; j++) {
+                    UtilityList PY_UL = extendUtilityLists.get(j);
+
+                    UtilityList PXY_UL = construct(prefixUtilityLists, PX_UL, PY_UL);
+                    if(null != PXY_UL && PXY_UL.getUtility() > 0) {
+                        newExULs.add(PXY_UL);
+                    }
+                }
+
+                int[] newPrefix;
+                if(null == prefix) {
+                     newPrefix = new int[1];
+                     newPrefix[0] = itemX;
+                }else {
+                    newPrefix = new int[prefix.length + 1];
+                    System.arraycopy(prefix, 0, newPrefix, 0, prefix.length);
+                    newPrefix[prefix.length] = itemX;
+                }
+
+                exploreSearchTree(newPrefix, PX_UL, newExULs);
+            }
+        }
+
+    }
+
+    public UtilityList construct(UtilityList P_UL, UtilityList PX_UL, UtilityList PY_UL) {
+        UtilityList PXY_UL = new UtilityList();
+        int tempUtility = PX_UL.getUtility() + PX_UL.getRemainingUtility();
+
+        List<Element> elements = PX_UL.getElements();
+
+        //LA_prune
+        for (Element eX : elements) {
+            Element ey = findElementWithTID(eX.getTid(), PY_UL);
+            if(null == ey) {
+                tempUtility -= (eX.getUtility() + eX.getRemainingUtility());
+                if(tempUtility < rfm.getMinMonetary()) {
+                    return null;
+                }
+            }
+        }
+
+        for (Element eX : elements) {
+            Element eY = findElementWithTID(eX.getTid(), PY_UL);
+            Element ePXY = null;
+            if(null == P_UL) {
+                ePXY = new Element(eX.getTid(), eX.getUtility() + eY.getUtility(), eY.getRemainingUtility());
+            }else {
+                Element eP = findElementWithTID(eX.getTid(), P_UL);
+                if(null != eP) {
+                    ePXY = new Element(eX.getTid(), eX.getUtility() + eY.getUtility() - eP.getUtility(), eY.getUtility());
+                }
+            }
+
+            if (ePXY != null) {
+                PXY_UL.addElement(ePXY);
+            }
+        }
+        return PXY_UL;
+    }
+
+    //Use W.
+    public Element findElementWithTID(int tid, UtilityList ul) {
+        List<Element> list = ul.getElements();
+
+        int first = 0;
+        int last = list.size() - 1;
+
+        // the binary search
+        while (first <= last) {
+            int middle = (first + last) >>> 1;
+
+            if (list.get(middle).getTid() < tid) {
+                first = middle + 1;
+            } else if (list.get(middle).getTid() > tid) {
+                last = middle - 1;
+            } else {
+                return list.get(middle);
+            }
+        }
+        return null;
     }
 }

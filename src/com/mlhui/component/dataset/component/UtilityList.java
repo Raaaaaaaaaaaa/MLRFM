@@ -61,4 +61,6 @@ public class UtilityList {
         RemainingUtility += element.getRemainingUtility();
         elements.add(element);
     }
+
+
 }

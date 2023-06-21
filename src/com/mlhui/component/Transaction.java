@@ -1,5 +1,7 @@
 package com.mlhui.component;
 
+import com.mlhui.others.ExternalPair;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -69,4 +71,6 @@ public class Transaction {
     public void setMapItemToCount(Map<Integer, Integer> mapItemToCount) {
         this.mapItemToCount = mapItemToCount;
     }
+
+
 }
