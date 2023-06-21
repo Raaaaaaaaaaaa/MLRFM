@@ -21,7 +21,6 @@ public class Taxonomy {
     public Taxonomy() {
     }
 
-
     public Taxonomy(int maxLevel, Map<Integer, List<Integer>> itemListPerLevel, Map<Integer, List<Integer>> mapItemToAncestor, Map<Integer, List<Integer>> mapItemToChildren) {
         this.maxLevel = maxLevel;
         this.itemListPerLevel = itemListPerLevel;
@@ -60,5 +59,4 @@ public class Taxonomy {
     public void setMapItemToChildren(Map<Integer, List<Integer>> mapItemToChildren) {
         this.mapItemToChildren = mapItemToChildren;
     }
-
 }

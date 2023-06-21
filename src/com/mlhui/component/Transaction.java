@@ -19,17 +19,19 @@ public class Transaction {
     private int TU;
     private double recency;
     private Map<Integer, Integer> mapItemToCount = new HashMap<>();
+    private Map<Integer, Integer> mapItemToUtility = new HashMap<>();
 
 
     public Transaction() {
     }
 
-    public Transaction(int tid, Map<Integer, List<Integer>> itemListPerLevel, int TU, double recency, Map<Integer, Integer> mapItemToCount) {
+    public Transaction(int tid, Map<Integer, List<Integer>> itemListPerLevel, int TU, double recency, Map<Integer, Integer> mapItemToCount, Map<Integer, Integer> mapItemToUtility) {
         this.tid = tid;
         this.itemListPerLevel = itemListPerLevel;
         this.TU = TU;
         this.recency = recency;
         this.mapItemToCount = mapItemToCount;
+        this.mapItemToUtility = mapItemToUtility;
     }
 
     public int getTid() {
@@ -72,5 +74,11 @@ public class Transaction {
         this.mapItemToCount = mapItemToCount;
     }
 
+    public Map<Integer, Integer> getMapItemToUtility() {
+        return mapItemToUtility;
+    }
 
+    public void setMapItemToUtility(Map<Integer, Integer> mapItemToUtility) {
+        this.mapItemToUtility = mapItemToUtility;
+    }
 }
