@@ -51,8 +51,8 @@ public class AlgorithmMLRFM {
         int maxLevel = mlhui.getTaxonomy().getMaxLevel();
         Map<Integer, List<UtilityList>> utilityListPerLevel = mlhui.getDataSet().getUtilityListPerLevel();
         for (int level = 0; level <= maxLevel; level++) {
-            exploreSearchTree(null, null,
-                    utilityListPerLevel.get(level));
+            exploreSearchTree(null, null, utilityListPerLevel.get(level));
+            rfm.setMinMonetary(rfm.getMinMonetary() * rfm.getTheta());
         }
 
         statistics.setEndTimestamp(System.currentTimeMillis());
@@ -559,6 +559,8 @@ public class AlgorithmMLRFM {
         rfm.setMinMonetary(userSpecified.getBeta());
 
         rfm.setDelta(userSpecified.getDelta());
+
+        rfm.setTheta(userSpecified.getTheta());
     }
 
     public Map<Integer, List<Integer>> getRFTPatterns(MLHUI mlhui, RFM rfm) {

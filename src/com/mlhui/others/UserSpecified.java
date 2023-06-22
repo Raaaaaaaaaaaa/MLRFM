@@ -5,15 +5,25 @@ public class UserSpecified {
     private double beta;
     private double gamma;
     private double delta;
+    private double theta;
 
     public UserSpecified() {
     }
 
-    public UserSpecified(double alpha, double beta, double gamma, double delta) {
+    public UserSpecified(double alpha, double beta, double gamma, double delta, double theta) {
         this.alpha = alpha;
         this.beta = beta;
         this.gamma = gamma;
         this.delta = delta;
+        this.theta = theta;
+    }
+
+    public double getTheta() {
+        return theta;
+    }
+
+    public void setTheta(double theta) {
+        this.theta = theta;
     }
 
     public double getAlpha() {

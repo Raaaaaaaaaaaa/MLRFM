@@ -9,15 +9,25 @@ public class RFM {
     private double minRecency;
     private double minMonetary;
     private double delta;
+    private double theta;
 
     public RFM() {
     }
 
-    public RFM(double minFrequency, double minRecency, double minMonetary, double delta) {
+    public RFM(double minFrequency, double minRecency, double minMonetary, double delta, double theta) {
         this.minFrequency = minFrequency;
         this.minRecency = minRecency;
         this.minMonetary = minMonetary;
         this.delta = delta;
+        this.theta = theta;
+    }
+
+    public double getTheta() {
+        return theta;
+    }
+
+    public void setTheta(double theta) {
+        this.theta = theta;
     }
 
     public RFM(double minFrequency, double minRecency, double minMonetary) {
