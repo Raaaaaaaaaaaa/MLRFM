@@ -6,7 +6,12 @@ public class main {
                 taxonomyFilePath = "./data/taxonomy.txt",
                 transactionFilePath = "./data/transaction.txt";
 
-        UserSpecified userSpecified = new UserSpecified(0.43, 500, 3, 0.01);
+        /*
+        * example 1. UserSpecified userSpecified = new UserSpecified(0.43, 500, 3, 0.01)
+        * example 2. UserSpecified userSpecified = new UserSpecified(0.43, 130, 3, 0.01);
+        * example 3. UserSpecified userSpecified = new UserSpecified(0.43, 170, 3, 0.01);
+         * */
+        UserSpecified userSpecified = new UserSpecified(0.43, 170, 3, 0.01);
 
         AlgorithmMLRFM algorithmMLRFM = new AlgorithmMLRFM();
         algorithmMLRFM.run(itemTableFilePath, taxonomyFilePath, transactionFilePath, userSpecified);

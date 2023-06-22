@@ -37,12 +37,13 @@ public class AlgorithmMLRFM {
         dataSet.setItemProfitTable(loadItemProfitTable(itemTablePath));
         dataSet.setTransactionList(loadTransaction(transactionFilePath));
 
+        setMinThreshold(userSpecified, rfm, mlhui);
+
         calculateTU(mlhui);
-        calculateRecency(mlhui, userSpecified.getDelta());
+        calculateRecency(mlhui, rfm.getDelta());
         calculateFrequency(mlhui);
         calculateTWU(mlhui);
 
-        setMinThreshold(userSpecified, rfm, mlhui);
         revisedTransaction(getRFTPatterns(mlhui, rfm), mlhui);
         constructUtilityList(mlhui);
 
@@ -556,6 +557,8 @@ public class AlgorithmMLRFM {
         rfm.setMinFrequency(transactionSize * userSpecified.getAlpha());
 
         rfm.setMinMonetary(userSpecified.getBeta());
+
+        rfm.setDelta(userSpecified.getDelta());
     }
 
     public Map<Integer, List<Integer>> getRFTPatterns(MLHUI mlhui, RFM rfm) {
@@ -723,17 +726,14 @@ public class AlgorithmMLRFM {
 
     public void exploreSearchTree(int[] prefix, UtilityList prefixUtilityLists,
                                   List<UtilityList> extendUtilityLists) {
-        Map<Integer, Integer> mapItemToFrequency = mlhui.getMapItemToFrequency();
-        Map<Integer, Double> mapItemToRecency = mlhui.getMapItemToRecency();
 
         int len = extendUtilityLists.size();
         for (int i = 0; i < len; i++) {
             UtilityList PX_UL = extendUtilityLists.get(i);
             int itemX = PX_UL.getItem();
-            if(PX_UL.getUtility() >= rfm.getMinMonetary() && mapItemToFrequency.get(itemX) >= rfm.getMinFrequency()
-                    && mapItemToRecency.get(itemX) >= rfm.getMinRecency()) {
-                //handle the RFM-patterns
-                System.out.println(itemX);
+            if(PX_UL.getUtility() >= rfm.getMinMonetary() && PX_UL.getElements().size() >= rfm.getMinFrequency()
+                    && getPXRecency(PX_UL) >= rfm.getMinRecency()) {
+                printRFMPatterns(itemX, prefix);
             }
 
             List<UtilityList> newExULs = new ArrayList<>();
@@ -760,28 +760,42 @@ public class AlgorithmMLRFM {
                 exploreSearchTree(newPrefix, PX_UL, newExULs);
             }
         }
-
     }
 
+    public double getPXRecency(UtilityList PX_UL) {
+        List<Element> elements = PX_UL.getElements();
+        double delta = rfm.getDelta();
+        double constant = 1 - delta;
+        int tLast = mlhui.getDataSet().getTransactionList().size();
+
+        double recency = 0.0;
+        for (Element element : elements) {
+            int tid = element.getTid();
+            recency += Math.pow(constant, tLast - tid);
+        }
+
+        return recency;
+    }
+
+
     public UtilityList construct(UtilityList P_UL, UtilityList PX_UL, UtilityList PY_UL) {
-        UtilityList PXY_UL = new UtilityList();
+        UtilityList PXY_UL = new UtilityList(PY_UL.getItem());
         int tempUtility = PX_UL.getUtility() + PX_UL.getRemainingUtility();
 
         List<Element> elements = PX_UL.getElements();
 
         //LA_prune
         for (Element eX : elements) {
-            Element ey = findElementWithTID(eX.getTid(), PY_UL);
-            if(null == ey) {
+            Element eY = findElementWithTID(eX.getTid(), PY_UL);
+            if(null == eY) {
                 tempUtility -= (eX.getUtility() + eX.getRemainingUtility());
                 if(tempUtility < rfm.getMinMonetary()) {
                     return null;
                 }
+                // ey dosen't exist, then don't need to a new element of PXY
+                continue;
             }
-        }
 
-        for (Element eX : elements) {
-            Element eY = findElementWithTID(eX.getTid(), PY_UL);
             Element ePXY = null;
             if(null == P_UL) {
                 ePXY = new Element(eX.getTid(), eX.getUtility() + eY.getUtility(), eY.getRemainingUtility());
@@ -796,6 +810,7 @@ public class AlgorithmMLRFM {
                 PXY_UL.addElement(ePXY);
             }
         }
+
         return PXY_UL;
     }
 
@@ -827,5 +842,17 @@ public class AlgorithmMLRFM {
         int compare = mapItemToTWU.get(item1) - mapItemToTWU.get(item2);
         // if the same, use the lexical order otherwise use the TWU
         return (compare == 0) ? item1 - item2 : compare;
+    }
+
+    private void printRFMPatterns(int itemX, int[] prefix) {
+        //handle the RFM-patterns
+        System.out.print("{");
+        if(null != prefix) {
+            for (int p : prefix) {
+                System.out.print(p+" ");
+            }
+        }
+        System.out.print(itemX + "}");
+        System.out.println();
     }
 }

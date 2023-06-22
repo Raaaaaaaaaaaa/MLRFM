@@ -17,6 +17,10 @@ public class UtilityList {
     public UtilityList() {
     }
 
+    public UtilityList(int item) {
+        this.item = item;
+    }
+
     public UtilityList(int item, int utility, int remainingUtility, List<Element> elements) {
         this.item = item;
         Utility = utility;

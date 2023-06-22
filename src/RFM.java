@@ -8,8 +8,16 @@ public class RFM {
     private double minFrequency;
     private double minRecency;
     private double minMonetary;
+    private double delta;
 
     public RFM() {
+    }
+
+    public RFM(double minFrequency, double minRecency, double minMonetary, double delta) {
+        this.minFrequency = minFrequency;
+        this.minRecency = minRecency;
+        this.minMonetary = minMonetary;
+        this.delta = delta;
     }
 
     public RFM(double minFrequency, double minRecency, double minMonetary) {
@@ -40,5 +48,13 @@ public class RFM {
 
     public void setMinMonetary(double minMonetary) {
         this.minMonetary = minMonetary;
+    }
+
+    public double getDelta() {
+        return delta;
+    }
+
+    public void setDelta(double delta) {
+        this.delta = delta;
     }
 }
