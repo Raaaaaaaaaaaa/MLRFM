@@ -7,11 +7,18 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class MLHUI {
+    //store the transactions, utilityList that use in extend process, and itemProfitable
     private DataSet dataSet = new DataSet();
+    //store the taxonomy information
     private Taxonomy taxonomy;
+    //store the 1-item corresponding recency in different level
     private Map<Integer, Double> mapItemToRecency = new HashMap<>();
+    //store the 1-item corresponding frequency in different level
     private Map<Integer, Integer> mapItemToFrequency= new HashMap<>();
+    @Deprecated
+    //store the 1-item corresponding recency in different level
     private Map<Integer, Double> mapItemToMonetary = new HashMap<>();
+    //store the 1-item corresponding TWU in different level
     private Map<Integer, Integer> mapItemToTWU = new HashMap<>();
 
 

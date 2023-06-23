@@ -15,10 +15,14 @@ import java.util.Map;
  */
 public class Transaction {
     private int tid;
+    //store the containing items  in different level in transaction
     private Map<Integer, List<Integer>> itemListPerLevel = new HashMap<>();
     private int TU;
+    //store the recency because, the formulate of recency only relate to the information of transaction
     private double recency;
+    //store the count of item in this transaction in this transaction
     private Map<Integer, Integer> mapItemToCount = new HashMap<>();
+    //store the Utility of item in different level in this transaction
     private Map<Integer, Integer> mapItemToUtility = new HashMap<>();
 
 

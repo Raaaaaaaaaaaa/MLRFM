@@ -8,8 +8,11 @@ public class Statistics {
     private long startTimestamp;
     private long endTimestamp;
     private long maxMemory;
+    //RFT-patterns counter
     private int pHUICount;
+    //RFM-patterns counter
     private int HUICount;
+    //transaction list size counter
     private int transactionCnt;
 
     public Statistics() {

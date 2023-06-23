@@ -5,10 +5,15 @@
 * @description used to store the min thresholds in the algorithm
  */
 public class RFM {
+    //threshold of F-pattern
     private double minFrequency;
+    //threshold of R-pattern
     private double minRecency;
+    //threshold of M-pattern
     private double minMonetary;
+    //used to calculate the recency
     private double delta;
+    //used to calculate the minMonetary in different level
     private double theta;
 
     public RFM() {

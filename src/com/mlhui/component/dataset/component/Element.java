@@ -8,7 +8,9 @@ package com.mlhui.component.dataset.component;
  */
 public class Element {
     private int tid;
+    //the utility of item in this transaction
     private int utility;
+    //the remaining utility in this transaction based on TWU ascending order
     private int remainingUtility;
 
     public Element() {

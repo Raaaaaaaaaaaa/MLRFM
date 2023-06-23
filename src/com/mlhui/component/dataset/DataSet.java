@@ -15,8 +15,11 @@ import java.util.Map;
 * @description store the dataset will be used in the MLRFM
  */
 public class DataSet {
+    //store the UtilityList in different level
     private Map<Integer, List<UtilityList>> UtilityListPerLevel = new HashMap<>();
+    //store the transaction database
     private List<Transaction> transactionList = new ArrayList<>();
+    //store the item and corresponding utility/monetary
     private List<ExternalPair> itemProfitTable = new ArrayList<>();
 
     public DataSet() {

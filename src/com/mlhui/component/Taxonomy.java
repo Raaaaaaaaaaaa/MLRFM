@@ -13,8 +13,11 @@ import java.util.Map;
  */
 public class Taxonomy {
     private int maxLevel;
+    //store the items of each level
     private Map<Integer, List<Integer>> itemListPerLevel = new HashMap<>();
+    //store the item's all ancestor of each levels
     private Map<Integer, List<Integer>> mapItemToAncestor = new HashMap<>();
+    //store the item's children of next level, each child only occur once
     private Map<Integer, List<Integer>> mapItemToChildren = new HashMap<>();
 
 

@@ -7,11 +7,16 @@ import java.util.List;
 * @author ZengFanLong
 * @date 19/6/2023 下午4:36
 * @description used to store the pHUI's information in extend process.
+ * remember that all member variable exclude 'item' in here is belong to itemset of PX,
+ * that is item x with its prefix P, not only X.
  */
 public class UtilityList {
     int item;
+    //store the U(item), that is Utility in database.
     int Utility;
+    //store the RU(item), that is Remaining Utility in database.
     int RemainingUtility;
+    //store the transaction information that contains item
     List<Element> elements = new ArrayList<>();
 
     public UtilityList() {
@@ -65,6 +70,4 @@ public class UtilityList {
         RemainingUtility += element.getRemainingUtility();
         elements.add(element);
     }
-
-
 }
