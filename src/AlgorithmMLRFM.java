@@ -31,10 +31,11 @@ public class AlgorithmMLRFM {
 
         statistics.setStartTimestamp(System.currentTimeMillis());
 
-        mlhui.setTaxonomy(loadTaxonomy(taxonomyFilePath));
-
         DataSet dataSet = mlhui.getDataSet();
         dataSet.setItemProfitTable(loadItemProfitTable(itemTablePath));
+
+        mlhui.setTaxonomy(loadTaxonomy(taxonomyFilePath));
+
         dataSet.setTransactionList(loadTransaction(transactionFilePath));
 
         setMinThreshold(userSpecified, rfm, mlhui);
@@ -204,17 +205,23 @@ public class AlgorithmMLRFM {
             }
 
             if(0 == level) {
-                itemList.addAll(mapItemToAncestor.keySet());
+                List<ExternalPair> itemProfitTable = mlhui.getDataSet().getItemProfitTable();
+                for (ExternalPair externalPair : itemProfitTable) {
+                    int item = externalPair.getItem();
+                    itemList.add(item);
+                }
             }else {
-                for (Integer child : mapItemToAncestor.keySet()) {
-                    List<Integer> parentList = mapItemToAncestor.get(child);
+                //construct based on level 0 item
+                List<Integer> childItemList = taxonomy.getItemListPerLevel().get(0);
+                for (Integer child : childItemList) {
+                    List<Integer> parentItemList = mapItemToAncestor.get(child);
                     //because the item in this level l if and only if has one parent in up one level,
                     //so use ancestorList to construct the item in different level.
                     //`parentList.get(level-1)` means get the item in level l-1 's parent,
                     // and the parent is the level l item
-                    Integer parentItem = parentList.get(level - 1);
-                    if(!itemList.contains(parentItem)) {
-                        itemList.add(parentList.get(level-1));
+                    Integer parentItem = parentItemList.get(level - 1);
+                    if(null != parentItem && !itemList.contains(parentItem)) {
+                        itemList.add(parentItem);
                     }
                 }
             }
