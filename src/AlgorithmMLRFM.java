@@ -562,6 +562,14 @@ public class AlgorithmMLRFM {
 
         //calculate the Monetary where level > 0
         //TODO TWU of some high level item maybe too big
+        calculateTWUInHighLevel(mlhui);
+    }
+
+    public void calculateTWUInHighLevel(MLHUI mlhui) {
+        Taxonomy taxonomy = mlhui.getTaxonomy();
+
+        Map<Integer, Integer> mapItemToTWU = mlhui.getMapItemToTWU();
+        int maxLevel = taxonomy.getMaxLevel();
         for (int level = 1; level <= maxLevel; level++) {
             List<Integer> itemList = taxonomy.getItemListPerLevel().get(level);
             Map<Integer, List<Integer>> mapItemToChildren = taxonomy.getMapItemToChildren();
@@ -572,6 +580,7 @@ public class AlgorithmMLRFM {
                 if (null == itemTWU) {
                     itemTWU = 0;
                 }
+
 
                 for (Integer child : childrenList) {
                     itemTWU += mapItemToTWU.get(child);
@@ -717,6 +726,10 @@ public class AlgorithmMLRFM {
                     }
                 }
 
+                if(level > 0) {
+                    revisedTWUInHighLevel(level, mlhui, RFTListPerLevel);
+                }
+
                 itemList.sort(new Comparator<Integer>() {
                     @Override
                     public int compare(Integer item1, Integer item2) {
@@ -729,6 +742,30 @@ public class AlgorithmMLRFM {
         }
 
         constructMapItemToUtilityInHighLevel(mlhui, RFTListPerLevel);
+    }
+
+    public void revisedTWUInHighLevel(int level, MLHUI mlhui,Map<Integer, List<Integer>> RFTListPerLevel){
+        Taxonomy taxonomy = mlhui.getTaxonomy();
+
+        Map<Integer, Integer> mapItemToTWU = mlhui.getMapItemToTWU();
+        List<Integer> itemList = taxonomy.getItemListPerLevel().get(level);
+        Map<Integer, List<Integer>> mapItemToChildren = taxonomy.getMapItemToChildren();
+
+        List<Integer> RFTList = RFTListPerLevel.get(level-1);
+        for (Integer item : itemList) {
+            List<Integer> childrenList = mapItemToChildren.get(item);
+            Integer itemTWU = mapItemToTWU.get(item);
+            itemTWU = 0;
+
+
+            for (Integer child : childrenList) {
+                if(RFTList.contains(child)) {
+                    itemTWU += mapItemToTWU.get(child);
+                }
+            }
+
+            mapItemToTWU.put(item, itemTWU);
+        }
     }
 
     public void constructUtilityList(MLHUI mlhui) {
@@ -902,7 +939,7 @@ public class AlgorithmMLRFM {
         return PXY_UL;
     }
 
-    //Use W.
+    //cite W.
     public Element findElementWithTID(int tid, UtilityList ul) {
         List<Element> list = ul.getElements();
 
