@@ -13,5 +13,6 @@ public class main {
 
         AlgorithmMLRFM algorithmMLRFM = new AlgorithmMLRFM();
         algorithmMLRFM.run(itemTableFilePath, taxonomyFilePath, transactionFilePath, userSpecified);
+        algorithmMLRFM.printStatus();
     }
 }

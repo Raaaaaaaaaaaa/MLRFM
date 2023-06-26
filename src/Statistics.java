@@ -1,3 +1,7 @@
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 /**
 *
 * @author ZengFanLong
@@ -7,24 +11,27 @@
 public class Statistics {
     private long startTimestamp;
     private long endTimestamp;
-    private long maxMemory;
+    private double maxMemory;
     //RFT-patterns counter
-    private int pHUICount;
+    private int RFTPatternsCount = 0;
     //RFM-patterns counter
-    private int HUICount;
+    private int RFMPatternsCount = 0;
     //transaction list size counter
     private int transactionCnt;
+
+    private Map<Integer, List<String>> RFMPatternsPerLevel = new HashMap<>();
 
     public Statistics() {
     }
 
-    public Statistics(long startTimestamp, long endTimestamp, long maxMemory, int pHUICount, int HUICount, int transactionCnt) {
+    public Statistics(long startTimestamp, long endTimestamp, double maxMemory, int RFTPatternsCount, int RFMPatternsCount, int transactionCnt, Map<Integer, List<String>> RFMPatternsPerLevel) {
         this.startTimestamp = startTimestamp;
         this.endTimestamp = endTimestamp;
         this.maxMemory = maxMemory;
-        this.pHUICount = pHUICount;
-        this.HUICount = HUICount;
+        this.RFTPatternsCount = RFTPatternsCount;
+        this.RFMPatternsCount = RFMPatternsCount;
         this.transactionCnt = transactionCnt;
+        this.RFMPatternsPerLevel = RFMPatternsPerLevel;
     }
 
     public long getStartTimestamp() {
@@ -43,28 +50,28 @@ public class Statistics {
         this.endTimestamp = endTimestamp;
     }
 
-    public long getMaxMemory() {
+    public double getMaxMemory() {
         return maxMemory;
     }
 
-    public void setMaxMemory(long maxMemory) {
+    public void setMaxMemory(double maxMemory) {
         this.maxMemory = maxMemory;
     }
 
-    public int getpHUICount() {
-        return pHUICount;
+    public int getRFTPatternsCount() {
+        return RFTPatternsCount;
     }
 
-    public void setpHUICount(int pHUICount) {
-        this.pHUICount = pHUICount;
+    public void setRFTPatternsCount(int RFTPatternsCount) {
+        this.RFTPatternsCount = RFTPatternsCount;
     }
 
-    public int getHUICount() {
-        return HUICount;
+    public int getRFMPatternsCount() {
+        return RFMPatternsCount;
     }
 
-    public void setHUICount(int HUICount) {
-        this.HUICount = HUICount;
+    public void setRFMPatternsCount(int RFMPatternsCount) {
+        this.RFMPatternsCount = RFMPatternsCount;
     }
 
     public int getTransactionCnt() {
@@ -73,5 +80,13 @@ public class Statistics {
 
     public void setTransactionCnt(int transactionCnt) {
         this.transactionCnt = transactionCnt;
+    }
+
+    public Map<Integer, List<String>> getRFMPatternsPerLevel() {
+        return RFMPatternsPerLevel;
+    }
+
+    public void setRFMPatternsPerLevel(Map<Integer, List<String>> RFMPatternsPerLevel) {
+        this.RFMPatternsPerLevel = RFMPatternsPerLevel;
     }
 }

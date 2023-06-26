@@ -48,18 +48,35 @@ public class AlgorithmMLRFM {
         revisedTransaction(getRFTPatterns(mlhui, rfm), mlhui);
         constructUtilityList(mlhui);
 
+        startExploreSearchTree();
+
+        statistics.setEndTimestamp(System.currentTimeMillis());
+    }
+
+    public void startExploreSearchTree() {
+        checkMemory();
+
         //exploring the RFM-patterns in different level.
         int maxLevel = mlhui.getTaxonomy().getMaxLevel();
         Map<Integer, List<UtilityList>> utilityListPerLevel = mlhui.getDataSet().getUtilityListPerLevel();
+        Map<Integer, List<String>> rfmPatternsPerLevel = statistics.getRFMPatternsPerLevel();
+
         for (int level = 0; level <= maxLevel; level++) {
-            exploreSearchTree(null, null, utilityListPerLevel.get(level));
+            List<String> rfmPatterns = rfmPatternsPerLevel.get(level);
+            if(null == rfmPatterns) {
+                rfmPatterns = new ArrayList<>();
+            }
+
+            //rfmPatterns is just for statistics
+            exploreSearchTree(null, null, utilityListPerLevel.get(level), rfmPatterns);
+
+            rfmPatternsPerLevel.put(level, rfmPatterns);
+
             //change the minUtility/minMonetary in different level
             rfm.setMinMonetary(rfm.getMinMonetary() * rfm.getTheta());
         }
 
-        statistics.setEndTimestamp(System.currentTimeMillis());
-
-        printStatus(mlhui);
+        checkMemory();
     }
 
     public Taxonomy loadTaxonomy(String path){
@@ -306,6 +323,8 @@ public class AlgorithmMLRFM {
                 }
             }
         }
+
+        statistics.setTransactionCnt(transactionList.size());
 
         return transactionList;
     }
@@ -591,17 +610,44 @@ public class AlgorithmMLRFM {
         }
     }
 
-    public void printStatus(MLHUI mlhui) {
-        Taxonomy taxonomy = mlhui.getTaxonomy();
-        Map<Integer, Double> mapItemToRecency = mlhui.getMapItemToRecency();
-        Map<Integer, Integer> mapItemToFrequency = mlhui.getMapItemToFrequency();
-        Map<Integer, Integer> mapItemToTWU = mlhui.getMapItemToTWU();
+    public void printStatus() {
+        System.out.println("======================= ML-RFM Status =======================");
+        System.out.println("*********************** User-specified Threshold ***********************");
+        System.out.println("decayRate: " + rfm.getDelta() + " growth rate theta: " + rfm.getTheta());
+        System.out.println("minMonetary: " + rfm.getMinMonetary() + " minFrequency: " + rfm.getMinFrequency());
+        System.out.println("minRecency: " + rfm.getMinRecency());
+        System.out.println("************************************************************************");
 
+        System.out.println("*********************** Basic Information ***********************");
+        System.out.println("Total time: " + (statistics.getStartTimestamp() - statistics.getEndTimestamp()) / 1000 + "s");
+        System.out.println("Transaction counts: " + statistics.getTransactionCnt());
+        System.out.println("Memory Consumption: " + statistics.getMaxMemory() + " MB");
+        System.out.println("MaxLevel: " + mlhui.getTaxonomy().getMaxLevel());
+        System.out.println("RFT-patterns count: " + statistics.getRFTPatternsCount());
+        System.out.println("RFM-patterns count: " + statistics.getRFMPatternsCount());
+        printRFMPatternsCountInDifferentLevel(false);
+        System.out.println("************************************************************************");
+
+
+        printItemInformation(false);
+        printRFMPatterns(false);
+        System.out.println("===============================================================");
+    }
+
+    public void printItemInformation(boolean isPrint) {
+        if(!isPrint) {
+            return;
+        }
+
+        Taxonomy taxonomy = mlhui.getTaxonomy();
+        Map<Integer, Integer> mapItemToFrequency = mlhui.getMapItemToFrequency();
+        Map<Integer, Double> mapItemToRecency = mlhui.getMapItemToRecency();
+        Map<Integer, Integer> mapItemToTWU = mlhui.getMapItemToTWU();
         int maxLevel = taxonomy .getMaxLevel();
         System.out.println("item   Recency   Frequency  TWU");
         for (int level = 0; level <= maxLevel; level++) {
             List<Integer> itemList = taxonomy.getItemListPerLevel().get(level);
-            System.out.println("=========================level"+level+"===========================");
+            System.out.println("********************************* level"+level+" *********************************");
             for (Integer item : itemList) {
                 System.out.print(item);
                 System.out.print("   ");
@@ -612,10 +658,51 @@ public class AlgorithmMLRFM {
                 System.out.print(mapItemToTWU.get(item));
                 System.out.println();
             }
-            System.out.println("=========================level"+level+"===========================");
+            System.out.println("***********************************************************************************");
         }
     }
 
+    public void printRFMPatterns(boolean isPrint) {
+        if(!isPrint) {
+            return;
+        }
+
+        System.out.println("*********************** RFM patterns ***********************");
+        Map<Integer, List<String>> rfmPatternsPerLevel = statistics.getRFMPatternsPerLevel();
+        int maxLevel = mlhui.getTaxonomy().getMaxLevel();
+        for (int level = 0; level <= maxLevel; level++) {
+            System.out.println("+++++++++++++++++++++++level "+level+" +++++++++++++++++++++++++++++++++++");
+            List<String> RFMPatterns = rfmPatternsPerLevel.get(level);
+            int isNewLine = 0;
+            for (String rfmPattern : RFMPatterns) {
+                if(isNewLine == 5) {
+                    isNewLine = 0;
+                    System.out.println();
+                }
+                System.out.print(rfmPattern + " ");
+                isNewLine++;
+            }
+            System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+        }
+        System.out.println("************************************************************************");
+    }
+
+    public void printRFMPatternsCountInDifferentLevel(boolean isPrint) {
+        if(!isPrint) {
+            return;
+        }
+
+        System.out.println("*********************** RFM patterns Count *****************************");
+
+        Map<Integer, List<String>> rfmPatternsPerLevel = statistics.getRFMPatternsPerLevel();
+        int maxLevel = mlhui.getTaxonomy().getMaxLevel();
+
+        for (int level = 0; level <= maxLevel ; level++) {
+            System.out.println("Level " + level + ": " + rfmPatternsPerLevel.get(level).size());
+        }
+
+        System.out.println("************************************************************************");
+    }
 
     public Statistics getStatistics() {
         return statistics;
@@ -676,6 +763,8 @@ public class AlgorithmMLRFM {
                     RFTList.add(item);
                 }
             }
+
+            statistics.setRFTPatternsCount(statistics.getRFTPatternsCount() + RFTList.size());
 
             RFTListPerLevel.put(level, RFTList);
         }
@@ -847,7 +936,7 @@ public class AlgorithmMLRFM {
     }
 
     public void exploreSearchTree(int[] prefix, UtilityList prefixUtilityLists,
-                                  List<UtilityList> extendUtilityLists) {
+                                  List<UtilityList> extendUtilityLists, List<String> rfmPatterns) {
 
         int len = extendUtilityLists.size();
         for (int i = 0; i < len; i++) {
@@ -856,6 +945,10 @@ public class AlgorithmMLRFM {
             if(PX_UL.getUtility() >= rfm.getMinMonetary() && PX_UL.getElements().size() >= rfm.getMinFrequency()
                     && getPXRecency(PX_UL) >= rfm.getMinRecency()) {
                 printRFMPatterns(itemX, prefix);
+                int rfmPatternsCount = statistics.getRFMPatternsCount();
+                statistics.setRFMPatternsCount(rfmPatternsCount + 1);
+
+                rfmPatterns.add("{" + Arrays.toString(prefix) + itemX + "}");
             }
 
             //newExULs means that new Extend UtilityList, will use in next recursion.
@@ -882,7 +975,7 @@ public class AlgorithmMLRFM {
                 }
 
                 //use new prefix and new extendUtilityList to exploring RFM-patterns recursively
-                exploreSearchTree(newPrefix, PX_UL, newExULs);
+                exploreSearchTree(newPrefix, PX_UL, newExULs, rfmPatterns);
             }
         }
     }
@@ -980,5 +1073,18 @@ public class AlgorithmMLRFM {
         }
         System.out.print(itemX + "}");
         System.out.println();
+    }
+
+    /**
+     * Method to check the memory usage and keep the maximum memory usage.
+     */
+    private void checkMemory() {
+        // get the current memory usage
+        double currentMemory = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024d / 1024d;
+        // if higher than the maximum until now
+        if (currentMemory > statistics.getMaxMemory()) {
+            // replace the maximum with the current memory usage
+            statistics.setMaxMemory(currentMemory);
+        }
     }
 }
