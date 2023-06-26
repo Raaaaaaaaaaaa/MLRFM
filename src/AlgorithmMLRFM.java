@@ -625,12 +625,12 @@ public class AlgorithmMLRFM {
         System.out.println("MaxLevel: " + mlhui.getTaxonomy().getMaxLevel());
         System.out.println("RFT-patterns count: " + statistics.getRFTPatternsCount());
         System.out.println("RFM-patterns count: " + statistics.getRFMPatternsCount());
-        printRFMPatternsCountInDifferentLevel(false);
+        printRFMPatternsCountInDifferentLevel(true);
         System.out.println("************************************************************************");
 
 
         printItemInformation(false);
-        printRFMPatterns(false);
+        printRFMPatterns(true);
         System.out.println("===============================================================");
     }
 
@@ -682,6 +682,7 @@ public class AlgorithmMLRFM {
                 System.out.print(rfmPattern + " ");
                 isNewLine++;
             }
+            System.out.println();
             System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
         }
         System.out.println("************************************************************************");
@@ -944,11 +945,12 @@ public class AlgorithmMLRFM {
             int itemX = PX_UL.getItem();
             if(PX_UL.getUtility() >= rfm.getMinMonetary() && PX_UL.getElements().size() >= rfm.getMinFrequency()
                     && getPXRecency(PX_UL) >= rfm.getMinRecency()) {
-                printRFMPatterns(itemX, prefix);
+//                printRFMPatterns(itemX, prefix);
                 int rfmPatternsCount = statistics.getRFMPatternsCount();
                 statistics.setRFMPatternsCount(rfmPatternsCount + 1);
 
-                rfmPatterns.add("{" + Arrays.toString(prefix) + itemX + "}");
+                String prefixToPrint = null==prefix?"":Arrays.toString(prefix);
+                rfmPatterns.add("{" + prefixToPrint + itemX + "}");
             }
 
             //newExULs means that new Extend UtilityList, will use in next recursion.
