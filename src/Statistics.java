@@ -21,6 +21,8 @@ public class Statistics {
 
     private Map<Integer, List<String>> RFMPatternsPerLevel = new HashMap<>();
 
+    private Map<Integer, Double> minMonetaryPerLevel = new HashMap<>();
+
     public Statistics() {
     }
 
@@ -88,5 +90,13 @@ public class Statistics {
 
     public void setRFMPatternsPerLevel(Map<Integer, List<String>> RFMPatternsPerLevel) {
         this.RFMPatternsPerLevel = RFMPatternsPerLevel;
+    }
+
+    public Map<Integer, Double> getMinMonetaryPerLevel() {
+        return minMonetaryPerLevel;
+    }
+
+    public void setMinMonetaryPerLevel(Map<Integer, Double> minMonetaryPerLevel) {
+        this.minMonetaryPerLevel = minMonetaryPerLevel;
     }
 }

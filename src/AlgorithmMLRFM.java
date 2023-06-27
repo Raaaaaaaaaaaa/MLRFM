@@ -71,9 +71,9 @@ public class AlgorithmMLRFM {
 
                 for (Integer itemInLastLevel : itemListLastLevel) {
                     List<Integer> ancestor = mapItemToAncestor.get(itemInLastLevel);
-                    //get the level l's parent, because level 1's parent is store in index 0, so it is
-                    //ancestor.get(level-1)
-                    Integer item = ancestor.get(level - 1);
+                    //index 0 is the up one level ancestor of item, whole process is based on last level's item
+                    //if you can understand, maybe you can see the constructMapItemToAncestor'example first.(Ctrl + f search "constructMapItemToAncestor")
+                    Integer item = ancestor.get(0);
 
                     if(itemList.contains(item)) {
                         continue;
@@ -101,6 +101,7 @@ public class AlgorithmMLRFM {
                 rfmPatterns = new ArrayList<>();
             }
 
+            statistics.getMinMonetaryPerLevel().put(level, rfm.getMinMonetary());
             //rfmPatterns is just for statistics
             exploreSearchTree(null, null, utilityListPerLevel.get(level), rfmPatterns);
 
@@ -690,12 +691,13 @@ public class AlgorithmMLRFM {
         System.out.println("======================= ML-RFM Status =======================");
         System.out.println("*********************** User-specified Threshold ***********************");
         System.out.println("decayRate: " + rfm.getDelta() + " growth rate theta: " + rfm.getTheta());
-        System.out.println("minMonetary: " + rfm.getMinMonetary() + " minFrequency: " + rfm.getMinFrequency());
-        System.out.println("minRecency: " + rfm.getMinRecency());
+        //TODO maybe output different level or only the initial
+        System.out.println( "minRecency: " + rfm.getMinRecency()+ " minFrequency: " + rfm.getMinFrequency());
+        printMinMonetaryPerLevel();
         System.out.println("************************************************************************");
 
         System.out.println("*********************** Basic Information ***********************");
-        System.out.println("Total time: " + (statistics.getStartTimestamp() - statistics.getEndTimestamp()) / 1000 + "s");
+        System.out.println("Total time: " + (statistics.getEndTimestamp() - statistics.getStartTimestamp()) / 1000 + "s");
         System.out.println("Transaction counts: " + statistics.getTransactionCnt());
         System.out.println("Memory Consumption: " + statistics.getMaxMemory() + " MB");
         System.out.println("MaxLevel: " + mlhui.getTaxonomy().getMaxLevel());
@@ -779,6 +781,17 @@ public class AlgorithmMLRFM {
         }
 
         System.out.println("************************************************************************");
+    }
+
+    public void printMinMonetaryPerLevel() {
+        System.out.println("minMonetary: ");
+
+
+        Map<Integer, Double> minMonetaryPerLevel = statistics.getMinMonetaryPerLevel();
+        int len = minMonetaryPerLevel.size();
+        for (int i = 0; i < len; i++) {
+            System.out.println("level " +i + ": " + minMonetaryPerLevel.get(i));
+        }
     }
 
     public Statistics getStatistics() {
