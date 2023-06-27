@@ -19,13 +19,13 @@ public class MLHUI {
     //store the 1-item corresponding recency in different level
     private Map<Integer, Double> mapItemToMonetary = new HashMap<>();
     //store the 1-item corresponding TWU in different level
-    private Map<Integer, Integer> mapItemToTWU = new HashMap<>();
+    private Map<Integer, Double> mapItemToTWU = new HashMap<>();
 
 
     public MLHUI() {
     }
 
-    public MLHUI(DataSet dataSet, Taxonomy taxonomy, Map<Integer, Double> mapItemToRecency, Map<Integer, Integer> mapItemToFrequency, Map<Integer, Double> mapItemToMonetary, Map<Integer, Integer> mapItemToTWU) {
+    public MLHUI(DataSet dataSet, Taxonomy taxonomy, Map<Integer, Double> mapItemToRecency, Map<Integer, Integer> mapItemToFrequency, Map<Integer, Double> mapItemToMonetary, Map<Integer, Double> mapItemToTWU) {
         this.dataSet = dataSet;
         this.taxonomy = taxonomy;
         this.mapItemToRecency = mapItemToRecency;
@@ -66,11 +66,11 @@ public class MLHUI {
         this.mapItemToFrequency = mapItemToFrequency;
     }
 
-    public Map<Integer, Integer> getMapItemToTWU() {
+    public Map<Integer, Double> getMapItemToTWU() {
         return mapItemToTWU;
     }
 
-    public void setMapItemToTWU(Map<Integer, Integer> mapItemToTWU) {
+    public void setMapItemToTWU(Map<Integer, Double> mapItemToTWU) {
         this.mapItemToTWU = mapItemToTWU;
     }
 

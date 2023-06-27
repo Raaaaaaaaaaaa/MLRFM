@@ -25,22 +25,19 @@ public class AlgorithmMLRFM {
         mlhui = new MLHUI();
     }
 
-    public void run(String itemTablePath, String taxonomyFilePath, String transactionFilePath,
+    public void run(String taxonomyFilePath, String transactionFilePath,
                     UserSpecified userSpecified) {
         initMLRFM();
 
         statistics.setStartTimestamp(System.currentTimeMillis());
 
         DataSet dataSet = mlhui.getDataSet();
-        dataSet.setItemProfitTable(loadItemProfitTable(itemTablePath));
-
+        dataSet.setTransactionList(loadTransaction(transactionFilePath));// new
         mlhui.setTaxonomy(loadTaxonomy(taxonomyFilePath));
-
-        dataSet.setTransactionList(loadTransaction(transactionFilePath));
+        constructTransactionItemListPerLevel();
 
         setMinThreshold(userSpecified, rfm, mlhui);
 
-        calculateTU(mlhui);
         calculateRecency(mlhui, rfm.getDelta());
         calculateFrequency(mlhui);
         calculateTWU(mlhui);
@@ -51,6 +48,43 @@ public class AlgorithmMLRFM {
         startExploreSearchTree();
 
         statistics.setEndTimestamp(System.currentTimeMillis());
+    }
+
+    public void constructTransactionItemListPerLevel() {
+        List<Transaction> transactionList = mlhui.getDataSet().getTransactionList();
+
+        Taxonomy taxonomy = mlhui.getTaxonomy();
+        Map<Integer, List<Integer>> mapItemToAncestor = taxonomy.getMapItemToAncestor();
+
+        for (Transaction transaction : transactionList) {
+            Map<Integer, List<Integer>> itemListPerLevel = transaction.getItemListPerLevel();
+
+            //construct the high level item based on the last level itemList
+            int maxLevel = taxonomy.getMaxLevel();
+            for (int level = 1; level <= maxLevel; level++) {
+                List<Integer> itemList = itemListPerLevel.get(level);
+                List<Integer> itemListLastLevel = itemListPerLevel.get(level - 1);
+
+                if(null == itemList) {
+                    itemList = new ArrayList<>();
+                }
+
+                for (Integer itemInLastLevel : itemListLastLevel) {
+                    List<Integer> ancestor = mapItemToAncestor.get(itemInLastLevel);
+                    //get the level l's parent, because level 1's parent is store in index 0, so it is
+                    //ancestor.get(level-1)
+                    Integer item = ancestor.get(level - 1);
+
+                    if(itemList.contains(item)) {
+                        continue;
+                    }
+
+                    itemList.add(item);
+                }
+                itemListPerLevel.put(level, itemList);
+            }
+        }
+
     }
 
     public void startExploreSearchTree() {
@@ -178,8 +212,8 @@ public class AlgorithmMLRFM {
 
     public void constructTaxonomyDetails(Taxonomy taxonomy, String line) {
         String[] split = line.trim().split(",");
-        Integer parent = Integer.parseInt(split[0]);
-        Integer child = Integer.parseInt(split[1]);
+        Integer parent = Integer.parseInt(split[1]);
+        Integer child = Integer.parseInt(split[0]);
 
         //construct the mapItemToChildren
         Map<Integer, List<Integer>> mapItemToChildren = taxonomy.getMapItemToChildren();
@@ -222,11 +256,13 @@ public class AlgorithmMLRFM {
             }
 
             if(0 == level) {
-                List<ExternalPair> itemProfitTable = mlhui.getDataSet().getItemProfitTable();
-                for (ExternalPair externalPair : itemProfitTable) {
-                    int item = externalPair.getItem();
-                    itemList.add(item);
-                }
+                List<Integer> itemTable = mlhui.getDataSet().getItemTable();
+                itemList.addAll(itemTable);
+//                List<ExternalPair> itemProfitTable = mlhui.getDataSet().getItemProfitTable();
+//                for (ExternalPair externalPair : itemProfitTable) {
+//                    int item = externalPair.getItem();
+//                    itemList.add(item);
+//                }
             }else {
                 //construct based on level 0 item
                 List<Integer> childItemList = taxonomy.getItemListPerLevel().get(0);
@@ -247,6 +283,7 @@ public class AlgorithmMLRFM {
         }
     }
 
+    @Deprecated
     public List<ExternalPair> loadItemProfitTable(String path) {
         List<ExternalPair> itemList =  new ArrayList<>();
 
@@ -308,7 +345,7 @@ public class AlgorithmMLRFM {
                     continue;
                 }
 
-                transactionList.add(constructTransaction(tid, line, mlhui));
+                transactionList.add(constructTransactionForSPMF(tid, line, mlhui));
 
                 tid++;
             }
@@ -329,6 +366,40 @@ public class AlgorithmMLRFM {
         return transactionList;
     }
 
+    /*
+    * only construct the level 0's transaction,
+    * generalize item need to be further process
+    * */
+    private Transaction constructTransactionForSPMF(int tid,  String line, MLHUI mlhui) {
+        List<Integer> itemTable = mlhui.getDataSet().getItemTable();
+
+        Transaction transaction = new Transaction();
+        transaction.setTid(tid);
+
+        String[] split = line.trim().split(":");
+        String[] items = split[0].trim().split(",");
+        String TU = split[1];
+        String[] utilitys = split[2].trim().split(",");
+
+        transaction.setTU(Double.parseDouble(TU));
+        List<Integer> itemList = new ArrayList<>();
+        Map<Integer, Double> mapItemToUtility = transaction.getMapItemToUtility();
+
+        int len = items.length;
+        for (int i = 0; i < len; i++) {
+            int item = Integer.parseInt(items[i]);
+            itemList.add(item);
+            mapItemToUtility.put(item, Double.valueOf(utilitys[i]));
+            if(!itemTable.contains(item)) {
+                itemTable.add(item);
+            }
+        }
+
+        transaction.getItemListPerLevel().put(0, itemList);
+        return transaction;
+    }
+
+    @Deprecated
     private Transaction constructTransaction(int tid,  String line, MLHUI mlhui) {
         Transaction transaction = new Transaction();
         transaction.setTid(tid);
@@ -432,6 +503,7 @@ public class AlgorithmMLRFM {
 
     }
 
+    @Deprecated
     public void calculateTU(MLHUI mlhui) {
         DataSet dataSet = mlhui.getDataSet();
         List<ExternalPair> itemProfitTable = dataSet.getItemProfitTable();
@@ -440,14 +512,14 @@ public class AlgorithmMLRFM {
         for (Transaction transaction : transactionList) {
             int tu = 0;
             Map<Integer, Integer> mapItemToCount = transaction.getMapItemToCount();
-            Map<Integer, Integer> mapItemToUtility = transaction.getMapItemToUtility();
+            Map<Integer, Double> mapItemToUtility = transaction.getMapItemToUtility();
             //use level l=0 's item to calculate TU
             List<Integer> itemList = transaction.getItemListPerLevel().get(0);
             for (int item : itemList) {
                 int utility = getItemUtility(item, itemProfitTable);
                 int cnt = mapItemToCount.get(item);
                 //store the level 0 's utility
-                mapItemToUtility.put(item, utility * cnt);
+                mapItemToUtility.put(item, utility * cnt * 1.0);
                 tu += utility * cnt;
             }
 
@@ -464,7 +536,7 @@ public class AlgorithmMLRFM {
         for (Transaction transaction : transactionList) {
             Map<Integer, List<Integer>> itemListPerLevel = transaction.getItemListPerLevel();
             Map<Integer, List<Integer>> mapItemToChildren = taxonomy.getMapItemToChildren();
-            Map<Integer, Integer> mapItemToUtility = transaction.getMapItemToUtility();
+            Map<Integer, Double> mapItemToUtility = transaction.getMapItemToUtility();
 
             for (int level = 1; level <= maxLevel; level++) {
                 List<Integer> itemList = itemListPerLevel.get(level);
@@ -478,7 +550,7 @@ public class AlgorithmMLRFM {
                     Integer item = iterator.next();
                     if(RFTList.contains(item)) {
                         List<Integer> children = mapItemToChildren.get(item);
-                        int itemUtility = 0;
+                        double itemUtility = 0;
                         for (Integer child : children) {
                             if(childItemList.contains(child) && RFTChildList.contains(child)) {
                                 itemUtility += mapItemToUtility.get(child);
@@ -499,6 +571,10 @@ public class AlgorithmMLRFM {
         }
     }
 
+
+
+
+    @Deprecated
     public Integer getItemUtility(int item, List<ExternalPair> itemProfitTable) {
         for (ExternalPair externalPair : itemProfitTable) {
             if(item == externalPair.getItem()) {
@@ -563,15 +639,15 @@ public class AlgorithmMLRFM {
         Taxonomy taxonomy = mlhui.getTaxonomy();
         int maxLevel = taxonomy.getMaxLevel();
         List<Transaction> transactionList = mlhui.getDataSet().getTransactionList();
-        Map<Integer, Integer> mapItemToTWU = mlhui.getMapItemToTWU();
+        Map<Integer, Double> mapItemToTWU = mlhui.getMapItemToTWU();
 
         //calculate the Monetary where level = 0
         for (Transaction transactionSet : transactionList) {
             List<Integer> itemList = transactionSet.getItemListPerLevel().get(0);
             for (Integer item : itemList) {
-                Integer itemTWU = mapItemToTWU.get(item);
+                Double itemTWU = mapItemToTWU.get(item);
                 if (null == itemTWU) {
-                    itemTWU = 0;
+                    itemTWU = 0.0;
                 }
                 itemTWU += transactionSet.getTU();
 
@@ -587,17 +663,17 @@ public class AlgorithmMLRFM {
     public void calculateTWUInHighLevel(MLHUI mlhui) {
         Taxonomy taxonomy = mlhui.getTaxonomy();
 
-        Map<Integer, Integer> mapItemToTWU = mlhui.getMapItemToTWU();
+        Map<Integer, Double> mapItemToTWU = mlhui.getMapItemToTWU();
         int maxLevel = taxonomy.getMaxLevel();
         for (int level = 1; level <= maxLevel; level++) {
             List<Integer> itemList = taxonomy.getItemListPerLevel().get(level);
             Map<Integer, List<Integer>> mapItemToChildren = taxonomy.getMapItemToChildren();
             for (Integer item : itemList) {
                 List<Integer> childrenList = mapItemToChildren.get(item);
-                Integer itemTWU = mapItemToTWU.get(item);
+                Double itemTWU = mapItemToTWU.get(item);
 
                 if (null == itemTWU) {
-                    itemTWU = 0;
+                    itemTWU = 0.0;
                 }
 
 
@@ -642,7 +718,7 @@ public class AlgorithmMLRFM {
         Taxonomy taxonomy = mlhui.getTaxonomy();
         Map<Integer, Integer> mapItemToFrequency = mlhui.getMapItemToFrequency();
         Map<Integer, Double> mapItemToRecency = mlhui.getMapItemToRecency();
-        Map<Integer, Integer> mapItemToTWU = mlhui.getMapItemToTWU();
+        Map<Integer, Double> mapItemToTWU = mlhui.getMapItemToTWU();
         int maxLevel = taxonomy .getMaxLevel();
         System.out.println("item   Recency   Frequency  TWU");
         for (int level = 0; level <= maxLevel; level++) {
@@ -745,7 +821,7 @@ public class AlgorithmMLRFM {
     public Map<Integer, List<Integer>> getRFTPatterns(MLHUI mlhui, RFM rfm) {
         Map<Integer, List<Integer>> RFTListPerLevel = new HashMap<>();
 
-        Map<Integer, Integer> mapItemToTWU = mlhui.getMapItemToTWU();
+        Map<Integer, Double> mapItemToTWU = mlhui.getMapItemToTWU();
         Map<Integer, Double> mapItemToRecency = mlhui.getMapItemToRecency();
         Map<Integer, Integer> mapItemToFrequency = mlhui.getMapItemToFrequency();
         Map<Integer, List<Integer>> itemListPerLevel = mlhui.getTaxonomy().getItemListPerLevel();
@@ -779,7 +855,6 @@ public class AlgorithmMLRFM {
 
         DataSet dataSet = mlhui.getDataSet();
         List<Transaction> transactionList = dataSet.getTransactionList();
-        List<ExternalPair> itemProfitTable = dataSet.getItemProfitTable();
 
         for (int level = 0; level <= maxLevel; level++) {
             List<Integer> RFTList = RFTListPerLevel.get(level);
@@ -800,16 +875,17 @@ public class AlgorithmMLRFM {
             for (Transaction transaction : transactionList) {
                 Map<Integer, Integer> mapItemToCount = transaction.getMapItemToCount();
                 List<Integer> itemList = transaction.getItemListPerLevel().get(level);
+                Map<Integer, Double> mapItemToUtility = transaction.getMapItemToUtility();
 
                 Iterator<Integer> itemListIterator = itemList.iterator();
                 while (itemListIterator.hasNext()) {
                     int item = itemListIterator.next();
                     if (!RFTList.contains(item)) {
                         if(0 == level) {
-                            int utility = getItemUtility(item, itemProfitTable);
-                            Integer cnt = mapItemToCount.get(item);
+                            double utility = mapItemToUtility.get(item);
+//
                             //update the TU
-                            transaction.setTU(transaction.getTU() - utility * cnt);
+                            transaction.setTU(transaction.getTU() - utility);
                         }
 
                         itemListIterator.remove();
@@ -837,15 +913,15 @@ public class AlgorithmMLRFM {
     public void revisedTWUInHighLevel(int level, MLHUI mlhui,Map<Integer, List<Integer>> RFTListPerLevel){
         Taxonomy taxonomy = mlhui.getTaxonomy();
 
-        Map<Integer, Integer> mapItemToTWU = mlhui.getMapItemToTWU();
+        Map<Integer, Double> mapItemToTWU = mlhui.getMapItemToTWU();
         List<Integer> itemList = taxonomy.getItemListPerLevel().get(level);
         Map<Integer, List<Integer>> mapItemToChildren = taxonomy.getMapItemToChildren();
 
         List<Integer> RFTList = RFTListPerLevel.get(level-1);
         for (Integer item : itemList) {
             List<Integer> childrenList = mapItemToChildren.get(item);
-            Integer itemTWU = mapItemToTWU.get(item);
-            itemTWU = 0;
+            Double itemTWU = mapItemToTWU.get(item);
+            itemTWU = 0.0;
 
 
             for (Integer child : childrenList) {
@@ -884,7 +960,7 @@ public class AlgorithmMLRFM {
 
             for (Transaction transaction : transactionList) {
                 List<Integer> itemList = transaction.getItemListPerLevel().get(level);
-                Map<Integer, Integer> mapItemToUtility = transaction.getMapItemToUtility();
+                Map<Integer, Double> mapItemToUtility = transaction.getMapItemToUtility();
                 for (Integer item : itemList) {
                     Element element = new Element();
                     element.setTid(transaction.getTid());
@@ -907,7 +983,7 @@ public class AlgorithmMLRFM {
         Map<Integer, List<Integer>> itemListPerLevel = transaction.getItemListPerLevel();
         List<Integer> itemList = itemListPerLevel.get(level);
 
-        Map<Integer, Integer> mapItemToUtility = transaction.getMapItemToUtility();
+        Map<Integer, Double> mapItemToUtility = transaction.getMapItemToUtility();
 
         int s = itemList.indexOf(item);
         int size = itemList.size();
@@ -1001,7 +1077,7 @@ public class AlgorithmMLRFM {
     //cite W.
     public UtilityList construct(UtilityList P_UL, UtilityList PX_UL, UtilityList PY_UL) {
         UtilityList PXY_UL = new UtilityList(PY_UL.getItem());
-        int tempUtility = PX_UL.getUtility() + PX_UL.getRemainingUtility();
+        double tempUtility = PX_UL.getUtility() + PX_UL.getRemainingUtility();
 
         List<Element> elements = PX_UL.getElements();
 
@@ -1056,13 +1132,10 @@ public class AlgorithmMLRFM {
         return null;
     }
 
-    //cite W.
     private int compareItems(int item1, int item2) {
-        Map<Integer, Integer> mapItemToTWU = mlhui.getMapItemToTWU();
+        Map<Integer, Double> mapItemToTWU = mlhui.getMapItemToTWU();
 
-        int compare = mapItemToTWU.get(item1) - mapItemToTWU.get(item2);
-        // if the same, use the lexical order otherwise use the TWU
-        return (compare == 0) ? item1 - item2 : compare;
+        return Double.compare(mapItemToTWU.get(item1), mapItemToTWU.get(item2));
     }
 
     private void printRFMPatterns(int itemX, int[] prefix) {

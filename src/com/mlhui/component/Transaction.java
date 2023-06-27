@@ -17,19 +17,20 @@ public class Transaction {
     private int tid;
     //store the containing items  in different level in transaction
     private Map<Integer, List<Integer>> itemListPerLevel = new HashMap<>();
-    private int TU;
+    private double TU;
     //store the recency because, the formulate of recency only relate to the information of transaction
     private double recency;
+    @Deprecated
     //store the count of item in this transaction in this transaction
     private Map<Integer, Integer> mapItemToCount = new HashMap<>();
     //store the Utility of item in different level in this transaction
-    private Map<Integer, Integer> mapItemToUtility = new HashMap<>();
+    private Map<Integer, Double> mapItemToUtility = new HashMap<>();
 
 
     public Transaction() {
     }
 
-    public Transaction(int tid, Map<Integer, List<Integer>> itemListPerLevel, int TU, double recency, Map<Integer, Integer> mapItemToCount, Map<Integer, Integer> mapItemToUtility) {
+    public Transaction(int tid, Map<Integer, List<Integer>> itemListPerLevel, double TU, double recency, Map<Integer, Integer> mapItemToCount, Map<Integer, Double> mapItemToUtility) {
         this.tid = tid;
         this.itemListPerLevel = itemListPerLevel;
         this.TU = TU;
@@ -54,11 +55,11 @@ public class Transaction {
         this.itemListPerLevel = itemListPerLevel;
     }
 
-    public int getTU() {
+    public double getTU() {
         return TU;
     }
 
-    public void setTU(int TU) {
+    public void setTU(double TU) {
         this.TU = TU;
     }
 
@@ -78,11 +79,11 @@ public class Transaction {
         this.mapItemToCount = mapItemToCount;
     }
 
-    public Map<Integer, Integer> getMapItemToUtility() {
+    public Map<Integer, Double> getMapItemToUtility() {
         return mapItemToUtility;
     }
 
-    public void setMapItemToUtility(Map<Integer, Integer> mapItemToUtility) {
+    public void setMapItemToUtility(Map<Integer, Double> mapItemToUtility) {
         this.mapItemToUtility = mapItemToUtility;
     }
 }

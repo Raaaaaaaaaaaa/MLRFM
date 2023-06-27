@@ -19,9 +19,11 @@ public class DataSet {
     private Map<Integer, List<UtilityList>> UtilityListPerLevel = new HashMap<>();
     //store the transaction database
     private List<Transaction> transactionList = new ArrayList<>();
+    @Deprecated
     //store the item and corresponding utility/monetary
     private List<ExternalPair> itemProfitTable = new ArrayList<>();
-
+    //
+    private List<Integer> itemTable = new ArrayList<>();
     public DataSet() {
     }
 
@@ -29,6 +31,14 @@ public class DataSet {
         UtilityListPerLevel = utilityListPerLevel;
         this.transactionList = transactionList;
         this.itemProfitTable = itemProfitTable;
+    }
+
+    public List<Integer> getItemTable() {
+        return itemTable;
+    }
+
+    public void setItemTable(List<Integer> itemTable) {
+        this.itemTable = itemTable;
     }
 
     public Map<Integer, List<UtilityList>> getUtilityListPerLevel() {

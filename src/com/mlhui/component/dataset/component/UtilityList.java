@@ -13,9 +13,9 @@ import java.util.List;
 public class UtilityList {
     int item;
     //store the U(item), that is Utility in database.
-    int Utility;
+    double Utility;
     //store the RU(item), that is Remaining Utility in database.
-    int RemainingUtility;
+    double RemainingUtility;
     //store the transaction information that contains item
     List<Element> elements = new ArrayList<>();
 
@@ -41,7 +41,7 @@ public class UtilityList {
         this.item = item;
     }
 
-    public int getUtility() {
+    public double getUtility() {
         return Utility;
     }
 
@@ -49,7 +49,7 @@ public class UtilityList {
         Utility = utility;
     }
 
-    public int getRemainingUtility() {
+    public double getRemainingUtility() {
         return RemainingUtility;
     }
 

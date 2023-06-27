@@ -9,14 +9,14 @@ package com.mlhui.component.dataset.component;
 public class Element {
     private int tid;
     //the utility of item in this transaction
-    private int utility;
+    private double utility;
     //the remaining utility in this transaction based on TWU ascending order
-    private int remainingUtility;
+    private double remainingUtility;
 
     public Element() {
     }
 
-    public Element(int tid, int utility, int remainingUtility) {
+    public Element(int tid, double utility, double remainingUtility) {
         this.tid = tid;
         this.utility = utility;
         this.remainingUtility = remainingUtility;
@@ -30,19 +30,19 @@ public class Element {
         this.tid = tid;
     }
 
-    public int getUtility() {
+    public double getUtility() {
         return utility;
     }
 
-    public void setUtility(int utility) {
+    public void setUtility(double utility) {
         this.utility = utility;
     }
 
-    public int getRemainingUtility() {
+    public double getRemainingUtility() {
         return remainingUtility;
     }
 
-    public void setRemainingUtility(int remainingUtility) {
+    public void setRemainingUtility(double remainingUtility) {
         this.remainingUtility = remainingUtility;
     }
 }
