@@ -71,6 +71,12 @@ public class AlgorithmMLRFM {
 
                 for (Integer itemInLastLevel : itemListLastLevel) {
                     List<Integer> ancestor = mapItemToAncestor.get(itemInLastLevel);
+                    //the dataset in SPMF, sometimes item don't have ancestor
+                    if(null == ancestor) {
+//                        System.out.println("level :" + level);
+//                        System.out.println("item " + itemInLastLevel);
+                        continue;
+                    }
                     //index 0 is the up one level ancestor of item, whole process is based on last level's item
                     //if you can understand, maybe you can see the constructMapItemToAncestor'example first.(Ctrl + f search "constructMapItemToAncestor")
                     Integer item = ancestor.get(0);
@@ -259,23 +265,31 @@ public class AlgorithmMLRFM {
             if(0 == level) {
                 List<Integer> itemTable = mlhui.getDataSet().getItemTable();
                 itemList.addAll(itemTable);
-//                List<ExternalPair> itemProfitTable = mlhui.getDataSet().getItemProfitTable();
-//                for (ExternalPair externalPair : itemProfitTable) {
-//                    int item = externalPair.getItem();
-//                    itemList.add(item);
-//                }
             }else {
                 //construct based on level 0 item
                 List<Integer> childItemList = taxonomy.getItemListPerLevel().get(0);
                 for (Integer child : childItemList) {
                     List<Integer> parentItemList = mapItemToAncestor.get(child);
-                    //because the item in this level l if and only if has one parent in up one level,
-                    //so use ancestorList to construct the item in different level.
-                    //`parentList.get(level-1)` means get the item in level l-1 's parent,
-                    // and the parent is the level l item
-                    Integer parentItem = parentItemList.get(level - 1);
-                    if(null != parentItem && !itemList.contains(parentItem)) {
-                        itemList.add(parentItem);
+
+                    //the taxonomy in SPMF are not a tree
+                    if(parentItemList == null) {
+//                        System.out.println("level: " + level);
+//                        System.out.println("item: " + child);
+                        continue;
+                    }
+
+                    //the dataset in SPMF maybe compose of many sub pic, so
+                    //some items don't have level l's ancestor
+                    if(level - 1 < parentItemList.size()) {
+                        //because the item in this level l if and only if has one parent in up one level,
+                        //so use ancestorList to construct the item in different level.
+                        //`parentList.get(level-1)` means get the item in level l-1 's parent,
+                        // and the parent is the level l item
+                        Integer parentItem = parentItemList.get(level - 1);
+
+                        if(null != parentItem && !itemList.contains(parentItem)) {
+                            itemList.add(parentItem);
+                        }
                     }
                 }
             }
@@ -378,9 +392,9 @@ public class AlgorithmMLRFM {
         transaction.setTid(tid);
 
         String[] split = line.trim().split(":");
-        String[] items = split[0].trim().split(",");
+        String[] items = split[0].trim().split(" ");
         String TU = split[1];
-        String[] utilitys = split[2].trim().split(",");
+        String[] utilitys = split[2].trim().split(" ");
 
         transaction.setTU(Double.parseDouble(TU));
         List<Integer> itemList = new ArrayList<>();
@@ -677,8 +691,14 @@ public class AlgorithmMLRFM {
                     itemTWU = 0.0;
                 }
 
-
                 for (Integer child : childrenList) {
+                    //TODO what?looks like some items don't appear in transaction
+                    if(null == mapItemToTWU.get(child)) {
+//                        System.out.println("level :" + level);
+//                        System.out.println("item :" + child);
+                        continue;
+                    }
+
                     itemTWU += mapItemToTWU.get(child);
                 }
 
@@ -697,7 +717,7 @@ public class AlgorithmMLRFM {
         System.out.println("************************************************************************");
 
         System.out.println("*********************** Basic Information ***********************");
-        System.out.println("Total time: " + (statistics.getEndTimestamp() - statistics.getStartTimestamp()) / 1000 + "s");
+        System.out.println("Total time: " + (statistics.getEndTimestamp() - statistics.getStartTimestamp()) / 1000.0 + "s");
         System.out.println("Transaction counts: " + statistics.getTransactionCnt());
         System.out.println("Memory Consumption: " + statistics.getMaxMemory() + " MB");
         System.out.println("MaxLevel: " + mlhui.getTaxonomy().getMaxLevel());
@@ -708,7 +728,7 @@ public class AlgorithmMLRFM {
 
 
         printItemInformation(false);
-        printRFMPatterns(true);
+        printRFMPatterns(false);
         System.out.println("===============================================================");
     }
 
