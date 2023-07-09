@@ -5,13 +5,13 @@ public class main {
 //        String taxonomyFilePath = "./data/test_taxonomy.txt",
 //                transactionFilePath = "./data/test.txt";
 
-        String taxonomyFilePath = "./data/liquor_taxonomy.txt",
-                transactionFilePath = "./data/liquor_11.txt";
+        String taxonomyFilePath = "./data/Fruithut_taxonomy_data.txt",
+                transactionFilePath = "./data/fruithut_utility.txt";
 
         //set the user-specified variable
 //        UserSpecified userSpecified = new UserSpecified(0.43, 170, 3, 0.01, 1.6);
 
-        UserSpecified userSpecified = new UserSpecified(0.005, 10000, 0.005, 0.01, 2);
+        UserSpecified userSpecified = new UserSpecified(0.005, 100000000, 0.005, 0.01, 1);
 //        UserSpecified userSpecified = new UserSpecified(0.01, 1000, 10, 0.01, 1);
 
         AlgorithmMLRFM algorithmMLRFM = new AlgorithmMLRFM();
