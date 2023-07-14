@@ -727,8 +727,8 @@ public class AlgorithmMLRFM {
         System.out.println("************************************************************************");
 
 
-        printItemInformation(false);
-        printRFMPatterns(false);
+        printItemInformation(true);
+        printRFMPatterns(true);
         System.out.println("===============================================================");
     }
 
@@ -1110,18 +1110,18 @@ public class AlgorithmMLRFM {
     //cite W.
     public UtilityList construct(UtilityList P_UL, UtilityList PX_UL, UtilityList PY_UL) {
         UtilityList PXY_UL = new UtilityList(PY_UL.getItem());
-//        double tempUtility = PX_UL.getUtility() + PX_UL.getRemainingUtility();
+        double tempUtility = PX_UL.getUtility() + PX_UL.getRemainingUtility();
 
         List<Element> elements = PX_UL.getElements();
 
         for (Element eX : elements) {
             Element eY = findElementWithTID(eX.getTid(), PY_UL);
             if(null == eY) {
-//                tempUtility -= (eX.getUtility() + eX.getRemainingUtility());
-//                if(tempUtility < rfm.getMinMonetary()) {//LA-Prune
-//                    return null;
-//                }
-                // ey dosen't exist, then this transaction is not belong to itemset PXY.
+                tempUtility -= (eX.getUtility() + eX.getRemainingUtility());
+                if(tempUtility < rfm.getMinMonetary()) {//LA-Prune
+                    return null;
+                }
+//                 ey dosen't exist, then this transaction is not belong to itemset PXY.
                 continue;
             }
 
