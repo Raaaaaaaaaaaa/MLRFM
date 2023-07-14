@@ -1131,7 +1131,7 @@ public class AlgorithmMLRFM {
             }else {
                 Element eP = findElementWithTID(eX.getTid(), P_UL);
                 if(null != eP) {
-                    ePXY = new Element(eX.getTid(), eX.getUtility() + eY.getUtility() - eP.getUtility(), eY.getUtility());
+                    ePXY = new Element(eX.getTid(), eX.getUtility() + eY.getUtility() - eP.getUtility(), eY.getRemainingUtility());
                 }
             }
 
