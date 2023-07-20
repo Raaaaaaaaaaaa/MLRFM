@@ -26,13 +26,13 @@ public class AlgorithmMLRFM {
     }
 
     public void run(String taxonomyFilePath, String transactionFilePath,
-                    UserSpecified userSpecified) {
+                    UserSpecified userSpecified, double rate, int size) {
         initMLRFM();
 
         statistics.setStartTimestamp(System.currentTimeMillis());
 
         DataSet dataSet = mlhui.getDataSet();
-        dataSet.setTransactionList(loadTransaction(transactionFilePath));// new
+        dataSet.setTransactionList(loadTransaction(transactionFilePath, rate, size));// new
         mlhui.setTaxonomy(loadTaxonomy(taxonomyFilePath));
         constructTransactionItemListPerLevel();
 
@@ -346,7 +346,7 @@ public class AlgorithmMLRFM {
         return itemList;
     }
 
-    public List<Transaction> loadTransaction(String path) {
+    public List<Transaction> loadTransaction(String path, double rate, int size) {
         List<Transaction> transactionList = new ArrayList<>();
 
         BufferedReader br = null;
@@ -361,6 +361,10 @@ public class AlgorithmMLRFM {
                 }
 
                 transactionList.add(constructTransactionForSPMF(tid, line, mlhui));
+
+                if(tid >= (int) (rate * size)) {
+                    break;
+                }
 
                 tid++;
             }
@@ -707,7 +711,7 @@ public class AlgorithmMLRFM {
         }
     }
 
-    public void printStatus() {
+    public void printStatus(double rate) {
         System.out.println("======================= ML-RFM Status =======================");
         System.out.println("*********************** User-specified Threshold ***********************");
         System.out.println("decayRate: " + rfm.getDelta() + " growth rate theta: " + rfm.getTheta());
@@ -717,6 +721,7 @@ public class AlgorithmMLRFM {
         System.out.println("************************************************************************");
 
         System.out.println("*********************** Basic Information ***********************");
+        System.out.println("% Transaction: " + rate);
         System.out.println("Total time: " + (statistics.getEndTimestamp() - statistics.getStartTimestamp()) / 1000.0 + "s");
         System.out.println("Transaction counts: " + statistics.getTransactionCnt());
         System.out.println("Memory Consumption: " + statistics.getMaxMemory() + " MB");
@@ -727,9 +732,11 @@ public class AlgorithmMLRFM {
         System.out.println("************************************************************************");
 
 
-        printItemInformation(true);
-        printRFMPatterns(true);
+        printItemInformation(false);
+        printRFMPatterns(false);
         System.out.println("===============================================================");
+        System.out.println();
+        System.out.println();
     }
 
     public void printItemInformation(boolean isPrint) {
@@ -867,10 +874,18 @@ public class AlgorithmMLRFM {
                 RFTList = new ArrayList<>();
             }
 
+//            int cnt = 0;
             for (Integer item : itemListPerLevel.get(level)) {
                 if(mapItemToTWU.get(item) >= rfm.getMinMonetary() && mapItemToFrequency.get(item) >= rfm.getMinFrequency()
                         && mapItemToRecency.get(item) >= rfm.getMinRecency()) {
+//                    if(cnt == 1353 || cnt == 1352) {
+//                        System.out.println(mapItemToFrequency.get(cnt));
+//                        System.out.println(mapItemToRecency.get(cnt));
+//                        System.out.println(mapItemToTWU.get(cnt));
+//                    }
+
                     RFTList.add(item);
+//                    cnt++;
                 }
             }
 
